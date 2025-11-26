@@ -1,11 +1,9 @@
 // frontend/src/api/base.js
 
-export const API_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+export const API_URL = "https://api.xn--80a6ad.space";
 
 // Флаг, который решает: ходим на настоящий бэк или используем моки
-export const USE_MOCKS =
-  (import.meta.env.VITE_USE_MOCKS || "true").toLowerCase() === "true";
+export const USE_MOCKS = false;
 
 // ====== РЕАЛЬНЫЙ HTTP-КЛИЕНТ (используется только если USE_MOCKS === false) ======
 

@@ -1,12 +1,12 @@
-// src/pages/LoginPage.jsx
+// src/pages/RegisterPage.jsx
 
 import React, { useState } from "react";
-import { useAuth } from "../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
-function LoginPage() {
+function RegisterPage() {
   const navigate = useNavigate();
-  const { login, loading } = useAuth();
+  const { register, loading } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,13 +17,13 @@ function LoginPage() {
     setError("");
 
     try {
-      await login(email, password);
+      await register(email, password);
       navigate("/");
     } catch (err) {
       const message =
         err instanceof Error && err.message
           ? err.message
-          : "Не удалось войти. Попробуй ещё раз.";
+          : "Не удалось зарегистрироваться. Попробуй ещё раз.";
       setError(message);
     }
   }
@@ -56,7 +56,7 @@ function LoginPage() {
             marginBottom: "4px",
           }}
         >
-          Вход в панель агентства
+          Регистрация
         </h1>
         <p
           style={{
@@ -65,7 +65,7 @@ function LoginPage() {
             marginBottom: "20px",
           }}
         >
-          Введи email и пароль.
+          Создай аккаунт, чтобы войти.
         </p>
 
         {error && (
@@ -148,32 +148,34 @@ function LoginPage() {
               border: "none",
               fontWeight: 600,
               cursor: loading ? "default" : "pointer",
+              marginBottom: "12px",
             }}
           >
-            {loading ? "Входим..." : "Войти"}
+            {loading ? "Создаём аккаунт..." : "Зарегистрироваться"}
           </button>
-          <p
+        </form>
+
+        <p
+          style={{
+            fontSize: "14px",
+            color: "#9ca3af",
+            marginTop: "8px",
+          }}
+        >
+          Уже есть аккаунт?{" "}
+          <Link
+            to="/login"
             style={{
-              fontSize: "14px",
-              color: "#9ca3af",
-              marginTop: "8px",
+              color: "#60a5fa",
+              textDecoration: "none",
             }}
           >
-            Нет аккаунта?{" "}
-            <Link
-              to="/register"
-              style={{
-                color: "#60a5fa",
-                textDecoration: "none",
-              }}
-            >
-              Зарегистрироваться
-            </Link>
-          </p>
-        </form>
+            Войти
+          </Link>
+        </p>
       </div>
     </div>
   );
 }
 
-export default LoginPage;
+export default RegisterPage;

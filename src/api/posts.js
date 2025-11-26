@@ -7,25 +7,34 @@ import {
   mockDeletePost,
 } from "../mocks/mockBackend";
 
+// params: { accountId?: string, status?: string }
 export async function listPosts(params = {}) {
+  const { accountId, status } = params;
+
   if (USE_MOCKS) {
     return mockListPosts({
-      accountId: params.accountId || null,
-      status: params.status || null,
+      accountId: accountId || null,
+      status: status || null,
     });
   }
 
-  const query = new URLSearchParams();
-  if (params.accountId) query.set("account_id", params.accountId);
-  if (params.status) query.set("status", params.status);
+  const searchParams = new URLSearchParams();
+  if (accountId) searchParams.append("account_id", accountId); // как ждёт бэк
+  if (status) searchParams.append("status", status); // alias status_filter
 
-  return apiGet(`/posts?${query.toString()}`);
+  const query = searchParams.toString();
+  const url = query ? `/posts?${query}` : "/posts";
+
+  // apiGet уже сам подставляет API_URL и токен
+  const data = await apiGet(url);
+  return data;
 }
 
 export async function createPost(payload) {
   if (USE_MOCKS) {
     return mockCreatePost(payload);
   }
+  // payload: { account_id, media_id, caption, tags, scheduled_at }
   return apiPost("/posts", payload);
 }
 

@@ -2,7 +2,7 @@
 
 // Базовый URL твоего бэка.
 // Если хочешь через env, ниже покажу, как.
-export const API_URL = "http://localhost:8000";
+export const API_URL = "https://api.xn--80a6ad.space";
 
 // Общая обёртка над fetch, которую можно использовать во всех API-файлах.
 export async function apiFetch(path, options = {}) {

@@ -7,6 +7,7 @@ import UploadPage from "./pages/UploadPage";
 import QueuePage from "./pages/QueuePage";
 import AccountsPage from "./pages/AccountPage";
 import Layout from "./components/Layout/Layout";
+import RegisterPage from "./pages/RegisterPage";
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -31,6 +32,7 @@ export default function App() {
     <AuthProvider>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
         <Route
           path="/"
           element={

@@ -1,9 +1,9 @@
 // src/api/auth.js
 
 import { apiFetch } from "./client";
+import { API_URL } from "./base";
 
 // src/api/client.ts
-const API_URL = "http://localhost:8000";
 
 export async function loginRequest(email, password) {
   const response = await fetch(`${API_URL}/auth/login`, {
@@ -25,6 +25,29 @@ export async function loginRequest(email, password) {
   }
 
   return response.json();
+}
+
+export async function registerRequest(email, password) {
+  // Бэк ожидает тело формата { email, password }
+  const data = await fetch("/auth/register", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email: email,
+      password: password,
+    }),
+  });
+
+  // Формат ответа такой же, как и у логина:
+  // {
+  //   "id": "...",
+  //   "email": "...",
+  //   "role": "...",
+  //   "access_token": "..."
+  // }
+  return data;
 }
 
 export async function fetchMe() {
