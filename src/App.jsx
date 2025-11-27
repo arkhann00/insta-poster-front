@@ -1,54 +1,97 @@
-// src/App.jsx
-
-import { Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider, useAuth } from "./context/AuthContext";
+import React, { useEffect, useState } from "react";
+import {
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
+import { getMe } from "./api/auth";
 import LoginPage from "./pages/LoginPage";
-import UploadPage from "./pages/UploadPage";
-import QueuePage from "./pages/QueuePage";
-import AccountsPage from "./pages/AccountPage";
-import Layout from "./components/Layout/Layout";
-import RegisterPage from "./pages/RegisterPage";
+import DashboardPage from "./pages/DashboardPage";
 
-function ProtectedRoute({ children }) {
-  const { user, loading } = useAuth();
+function App() {
+  const [user, setUser] = useState(null); // { id, email, full_name, is_active } или null
+  const [loading, setLoading] = useState(true);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      setLoading(false);
+      setUser(null);
+      return;
+    }
+
+    async function fetchMe() {
+      try {
+        const me = await getMe();
+        setUser(me);
+      } catch (error) {
+        console.error("Failed to fetch /auth/me", error);
+        localStorage.removeItem("access_token");
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchMe();
+  }, []);
+
+  function handleLogout() {
+    localStorage.removeItem("access_token");
+    setUser(null);
+    navigate("/login");
+  }
 
   if (loading) {
     return (
-      <div className="w-full h-screen flex items-center justify-center">
-        <span>Загрузка...</span>
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "#020617",
+          color: "#e5e7eb",
+        }}
+      >
+        Загрузка...
       </div>
     );
   }
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return children;
-}
-
-export default function App() {
   return (
-    <AuthProvider>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <Layout />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<Navigate to="/upload" replace />} />
-          <Route path="upload" element={<UploadPage />} />
-          <Route path="queue" element={<QueuePage />} />
-          <Route path="accounts" element={<AccountsPage />} />
-        </Route>
-
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </AuthProvider>
+    <Routes>
+      <Route
+        path="/login"
+        element={
+          user ? (
+            <Navigate to="/" replace />
+          ) : (
+            <LoginPage
+              onLoginSuccess={(me) => {
+                setUser(me);
+                navigate("/");
+              }}
+            />
+          )
+        }
+      />
+      <Route
+        path="/"
+        element={
+          user ? (
+            <DashboardPage user={user} onLogout={handleLogout} />
+          ) : (
+            <Navigate to="/login" state={{ from: location }} replace />
+          )
+        }
+      />
+    </Routes>
   );
 }
+
+export default App;

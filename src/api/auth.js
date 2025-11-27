@@ -1,57 +1,27 @@
-// src/api/auth.js
+import { apiClient } from "./client";
 
-import { apiFetch } from "./client";
-import { API_URL } from "./base";
+// Логин: отправляем форму на /api/auth/login
+export async function login(email, password) {
+  const formData = new URLSearchParams();
 
-// src/api/client.ts
+  // backend ждёт поле "username", мы кладём туда email
+  formData.append("username", email);
+  formData.append("password", password);
+  formData.append("grant_type", "password");
 
-export async function loginRequest(email, password) {
-  const response = await fetch(`${API_URL}/auth/login`, {
-    method: "POST",
+  const response = await apiClient.post("/auth/login", formData, {
     headers: {
-      "Content-Type": "application/json",
+      "Content-Type": "application/x-www-form-urlencoded",
     },
-    body: JSON.stringify({
-      email: email,
-      password: password,
-    }),
   });
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => null);
-    throw new Error(
-      errorData?.detail ?? `Login failed with status ${response.status}`
-    );
-  }
-
-  return response.json();
+  // { access_token: "...", token_type: "bearer" }
+  return response.data;
 }
 
-export async function registerRequest(email, password) {
-  // Бэк ожидает тело формата { email, password }
-  const data = await fetch("/auth/register", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      email: email,
-      password: password,
-    }),
-  });
-
-  // Формат ответа такой же, как и у логина:
-  // {
-  //   "id": "...",
-  //   "email": "...",
-  //   "role": "...",
-  //   "access_token": "..."
-  // }
-  return data;
-}
-
-export async function fetchMe() {
-  const data = await apiFetch("/auth/me");
-  // data: { id, email, role }
-  return data;
+// Получение текущего пользователя по токену
+export async function getMe() {
+  const response = await apiClient.get("/auth/me");
+  // { id, email, full_name, is_active }
+  return response.data;
 }

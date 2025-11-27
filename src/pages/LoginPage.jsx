@@ -1,30 +1,28 @@
-// src/pages/LoginPage.jsx
-
 import React, { useState } from "react";
-import { useAuth } from "../context/AuthContext";
-import { useNavigate, Link } from "react-router-dom";
+import { login, getMe } from "../api/auth";
 
-function LoginPage() {
-  const navigate = useNavigate();
-  const { login, loading } = useAuth();
-
+function LoginPage({ onLoginSuccess }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
 
   async function handleSubmit(event) {
     event.preventDefault();
-    setError("");
+    setError(null);
+    setSubmitting(true);
 
     try {
-      await login(email, password);
-      navigate("/");
+      const data = await login(email, password);
+      localStorage.setItem("access_token", data.access_token);
+      const me = await getMe();
+      onLoginSuccess(me);
     } catch (err) {
-      const message =
-        err instanceof Error && err.message
-          ? err.message
-          : "Не удалось войти. Попробуй ещё раз.";
-      setError(message);
+      console.error(err);
+      setError("Неверный email или пароль");
+      localStorage.removeItem("access_token");
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -35,141 +33,94 @@ function LoginPage() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "#0f172a",
+        backgroundColor: "#020617",
         color: "#e5e7eb",
       }}
     >
       <div
         style={{
           width: "100%",
-          maxWidth: "420px",
-          padding: "32px",
-          borderRadius: "16px",
+          maxWidth: 400,
           backgroundColor: "#020617",
-          boxShadow: "0 20px 40px rgba(0,0,0,0.45)",
+          borderRadius: 16,
+          padding: 24,
+          border: "1px solid #1e293b",
+          boxShadow: "0 10px 40px rgba(15,23,42,0.8)",
         }}
       >
         <h1
           style={{
-            fontSize: "24px",
-            fontWeight: 700,
-            marginBottom: "4px",
+            fontSize: 22,
+            fontWeight: 600,
+            marginBottom: 16,
+            textAlign: "center",
           }}
         >
           Вход в панель агентства
         </h1>
-        <p
-          style={{
-            fontSize: "14px",
-            color: "#9ca3af",
-            marginBottom: "20px",
-          }}
-        >
-          Введи email и пароль.
-        </p>
-
-        {error && (
-          <div
-            style={{
-              marginBottom: "16px",
-              padding: "10px 12px",
-              borderRadius: "8px",
-              backgroundColor: "#451a1a",
-              color: "#fecaca",
-              fontSize: "14px",
-            }}
-          >
-            {error}
+        <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12 }}>
+          <div>
+            <label style={{ display: "block", fontSize: 14, marginBottom: 4 }}>
+              Email
+            </label>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              style={{
+                width: "100%",
+                padding: "8px 10px",
+                borderRadius: 8,
+                border: "1px solid #334155",
+                backgroundColor: "#020617",
+                color: "#e5e7eb",
+                outline: "none",
+              }}
+            />
           </div>
-        )}
-
-        <form onSubmit={handleSubmit}>
-          <label
-            style={{
-              display: "block",
-              fontSize: "14px",
-              marginBottom: "6px",
-            }}
-          >
-            Email
-          </label>
-          <input
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            required
-            style={{
-              width: "100%",
-              padding: "10px 12px",
-              borderRadius: "8px",
-              border: "1px solid #4b5563",
-              backgroundColor: "#020617",
-              color: "#e5e7eb",
-              marginBottom: "12px",
-              outline: "none",
-            }}
-          />
-
-          <label
-            style={{
-              display: "block",
-              fontSize: "14px",
-              marginBottom: "6px",
-            }}
-          >
-            Пароль
-          </label>
-          <input
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            required
-            style={{
-              width: "100%",
-              padding: "10px 12px",
-              borderRadius: "8px",
-              border: "1px solid #4b5563",
-              backgroundColor: "#020617",
-              color: "#e5e7eb",
-              marginBottom: "20px",
-              outline: "none",
-            }}
-          />
-
+          <div>
+            <label style={{ display: "block", fontSize: 14, marginBottom: 4 }}>
+              Пароль
+            </label>
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              style={{
+                width: "100%",
+                padding: "8px 10px",
+                borderRadius: 8,
+                border: "1px solid #334155",
+                backgroundColor: "#020617",
+                color: "#e5e7eb",
+                outline: "none",
+              }}
+            />
+          </div>
+          {error && (
+            <div style={{ fontSize: 14, color: "#f97373" }}>{error}</div>
+          )}
           <button
             type="submit"
-            disabled={loading}
+            disabled={submitting}
             style={{
               width: "100%",
-              padding: "10px 12px",
-              borderRadius: "8px",
-              backgroundColor: loading ? "#1d4ed8aa" : "#1d4ed8",
-              color: "#e5e7eb",
+              padding: "10px 0",
+              borderRadius: 8,
               border: "none",
-              fontWeight: 600,
-              cursor: loading ? "default" : "pointer",
+              backgroundColor: submitting ? "#4b5563" : "#4f46e5",
+              color: "white",
+              fontWeight: 500,
+              cursor: submitting ? "default" : "pointer",
+              transition: "background-color 0.15s",
             }}
           >
-            {loading ? "Входим..." : "Войти"}
+            {submitting ? "Входим..." : "Войти"}
           </button>
-          <p
-            style={{
-              fontSize: "14px",
-              color: "#9ca3af",
-              marginTop: "8px",
-            }}
-          >
-            Нет аккаунта?{" "}
-            <Link
-              to="/register"
-              style={{
-                color: "#60a5fa",
-                textDecoration: "none",
-              }}
-            >
-              Зарегистрироваться
-            </Link>
-          </p>
         </form>
       </div>
     </div>

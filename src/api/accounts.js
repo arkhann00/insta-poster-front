@@ -1,29 +1,25 @@
-// frontend/src/api/accounts.js
+import { apiClient } from "./client";
 
-import { USE_MOCKS, apiGet, apiPost, apiDelete } from "./base";
-import {
-  mockListAccounts,
-  mockCreateAccount,
-  mockDeleteAccount,
-} from "../mocks/mockBackend";
-
-export async function listAccounts() {
-  if (USE_MOCKS) {
-    return mockListAccounts();
-  }
-  return apiGet("/accounts");
+// Получить список бизнес-аккаунтов текущего пользователя
+export async function fetchAccounts() {
+  const response = await apiClient.get("/accounts/");
+  return response.data; // массив аккаунтов
 }
 
-export async function createAccount(payload) {
-  if (USE_MOCKS) {
-    return mockCreateAccount(payload);
-  }
-  return apiPost("/accounts", payload);
+// Создать новый бизнес-аккаунт
+export async function createAccount({ name, external_id, access_token }) {
+  const payload = {
+    name,
+    external_id: external_id || null,
+    access_token: access_token || null,
+    is_active: true,
+  };
+
+  const response = await apiClient.post("/accounts/", payload);
+  return response.data; // созданный аккаунт (без токена в ответе)
 }
 
+// Удалить аккаунт
 export async function deleteAccount(id) {
-  if (USE_MOCKS) {
-    return mockDeleteAccount(id);
-  }
-  return apiDelete(`/accounts/${id}`);
+  await apiClient.delete(`/accounts/${id}`);
 }
