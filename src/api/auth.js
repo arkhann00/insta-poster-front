@@ -1,3 +1,4 @@
+// src/api/auth.js
 import { apiClient } from "./client";
 
 // Логин: отправляем форму на /api/auth/login
@@ -16,6 +17,20 @@ export async function login(email, password) {
   });
 
   // { access_token: "...", token_type: "bearer" }
+  return response.data;
+}
+
+// Регистрация пользователя на /api/auth/register
+// Тело бэка: { email, password, full_name }
+export async function registerUser(email, password, fullName) {
+  const payload = {
+    email: email,
+    password: password,
+    full_name: fullName,
+  };
+
+  const response = await apiClient.post("/auth/register", payload);
+  // backend возвращает данные пользователя (без токена)
   return response.data;
 }
 

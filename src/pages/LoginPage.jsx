@@ -1,7 +1,10 @@
+// src/pages/LoginPage.jsx
 import React, { useState } from "react";
-import { login, getMe } from "../api/auth";
+import { login, getMe, registerUser } from "../api/auth";
 
 function LoginPage({ onLoginSuccess }) {
+  const [mode, setMode] = useState("login"); // "login" | "register"
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -13,18 +16,35 @@ function LoginPage({ onLoginSuccess }) {
     setSubmitting(true);
 
     try {
-      const data = await login(email, password);
-      localStorage.setItem("access_token", data.access_token);
-      const me = await getMe();
-      onLoginSuccess(me);
+      if (mode === "login") {
+        // Обычный логин
+        const data = await login(email, password);
+        localStorage.setItem("access_token", data.access_token);
+        const me = await getMe();
+        onLoginSuccess(me);
+      } else {
+        // Регистрация, потом автологин
+        await registerUser(email, password, fullName);
+
+        const data = await login(email, password);
+        localStorage.setItem("access_token", data.access_token);
+        const me = await getMe();
+        onLoginSuccess(me);
+      }
     } catch (err) {
       console.error(err);
-      setError("Неверный email или пароль");
+      if (mode === "login") {
+        setError("Неверный email или пароль");
+      } else {
+        setError("Не удалось зарегистрировать пользователя");
+      }
       localStorage.removeItem("access_token");
     } finally {
       setSubmitting(false);
     }
   }
+
+  const isLoginMode = mode === "login";
 
   return (
     <div
@@ -35,12 +55,14 @@ function LoginPage({ onLoginSuccess }) {
         justifyContent: "center",
         backgroundColor: "#020617",
         color: "#e5e7eb",
+        fontFamily:
+          "-apple-system, system-ui, BlinkMacSystemFont, 'SF Pro Text', sans-serif",
       }}
     >
       <div
         style={{
           width: "100%",
-          maxWidth: 400,
+          maxWidth: 420,
           backgroundColor: "#020617",
           borderRadius: 16,
           padding: 24,
@@ -52,15 +74,115 @@ function LoginPage({ onLoginSuccess }) {
           style={{
             fontSize: 22,
             fontWeight: 600,
-            marginBottom: 16,
+            marginBottom: 8,
             textAlign: "center",
           }}
         >
-          Вход в панель агентства
+          {isLoginMode ? "Вход в панель агентства" : "Регистрация сотрудника"}
         </h1>
+        <p
+          style={{
+            fontSize: 13,
+            color: "#9ca3af",
+            textAlign: "center",
+            marginBottom: 16,
+          }}
+        >
+          {isLoginMode
+            ? "Введи свои данные для входа в систему."
+            : "Создай учётную запись для доступа к панели."}
+        </p>
+
+        {/* Переключатель режимов */}
+        <div
+          style={{
+            display: "flex",
+            marginBottom: 16,
+            padding: 4,
+            borderRadius: 999,
+            backgroundColor: "#020617",
+            border: "1px solid #1f2937",
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => setMode("login")}
+            disabled={submitting}
+            style={{
+              flex: 1,
+              padding: "6px 0",
+              borderRadius: 999,
+              border: "none",
+              fontSize: 14,
+              cursor: submitting ? "default" : "pointer",
+              backgroundColor: isLoginMode ? "#4f46e5" : "transparent",
+              color: isLoginMode ? "#ffffff" : "#9ca3af",
+              transition: "background-color 0.15s, color 0.15s",
+            }}
+          >
+            Вход
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("register")}
+            disabled={submitting}
+            style={{
+              flex: 1,
+              padding: "6px 0",
+              borderRadius: 999,
+              border: "none",
+              fontSize: 14,
+              cursor: submitting ? "default" : "pointer",
+              backgroundColor: !isLoginMode ? "#4f46e5" : "transparent",
+              color: !isLoginMode ? "#ffffff" : "#9ca3af",
+              transition: "background-color 0.15s, color 0.15s",
+            }}
+          >
+            Регистрация
+          </button>
+        </div>
+
         <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12 }}>
+          {!isLoginMode && (
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: 14,
+                  marginBottom: 4,
+                  color: "#e5e7eb",
+                }}
+              >
+                Имя сотрудника
+              </label>
+              <input
+                type="text"
+                required
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Иван Иванов"
+                style={{
+                  width: "100%",
+                  padding: "8px 10px",
+                  borderRadius: 8,
+                  border: "1px solid #334155",
+                  backgroundColor: "#020617",
+                  color: "#e5e7eb",
+                  outline: "none",
+                }}
+              />
+            </div>
+          )}
+
           <div>
-            <label style={{ display: "block", fontSize: 14, marginBottom: 4 }}>
+            <label
+              style={{
+                display: "block",
+                fontSize: 14,
+                marginBottom: 4,
+                color: "#e5e7eb",
+              }}
+            >
               Email
             </label>
             <input
@@ -81,7 +203,14 @@ function LoginPage({ onLoginSuccess }) {
             />
           </div>
           <div>
-            <label style={{ display: "block", fontSize: 14, marginBottom: 4 }}>
+            <label
+              style={{
+                display: "block",
+                fontSize: 14,
+                marginBottom: 4,
+                color: "#e5e7eb",
+              }}
+            >
               Пароль
             </label>
             <input
@@ -119,7 +248,13 @@ function LoginPage({ onLoginSuccess }) {
               transition: "background-color 0.15s",
             }}
           >
-            {submitting ? "Входим..." : "Войти"}
+            {submitting
+              ? isLoginMode
+                ? "Входим..."
+                : "Регистрируем..."
+              : isLoginMode
+              ? "Войти"
+              : "Зарегистрироваться"}
           </button>
         </form>
       </div>
