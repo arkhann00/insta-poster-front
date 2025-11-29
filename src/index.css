@@ -122,7 +122,15 @@ body {
   border: none;
   padding: 8px 14px;
   cursor: pointer;
-  transition: background 0.15s ease, transform 0.07s ease, box-shadow 0.15s ease;
+  transition: background 0.15s ease, transform 0.07s ease, box-shadow 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.btn:disabled {
+  cursor: default;
+  opacity: 0.55;
+  box-shadow: none;
+  transform: none;
 }
 
 .btn-primary {
@@ -131,12 +139,12 @@ body {
   box-shadow: 0 10px 30px rgba(79, 70, 229, 0.42);
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
   background: linear-gradient(135deg, #6366f1, #818cf8);
   transform: translateY(-1px);
 }
 
-.btn-primary:active {
+.btn-primary:active:not(:disabled) {
   transform: translateY(0);
   box-shadow: none;
 }
@@ -147,12 +155,18 @@ body {
   border: 1px solid rgba(148, 163, 184, 0.5);
 }
 
-.btn-outline:hover {
+.btn-outline:hover:not(:disabled) {
   background: rgba(15, 23, 42, 0.85);
 }
 
 .btn-pill {
   border-radius: var(--radius-pill);
+}
+
+/* Необязательный лёгкий эффект для кнопки загрузки */
+
+.btn-loading {
+  position: relative;
 }
 
 /* Поля ввода */

@@ -23,6 +23,7 @@ function DashboardPage({ user, onLogout }) {
 
   // форма загрузки рилсов (несколько файлов)
   const [reelFiles, setReelFiles] = useState([]);
+  const [uploadingReels, setUploadingReels] = useState(false); // <-- новое состояние
 
   // состояние публикации
   const [publishing, setPublishing] = useState(false);
@@ -75,9 +76,8 @@ function DashboardPage({ user, onLogout }) {
     }
   }
 
-  // Удаление аккаунта
+  // Удаление аккаунта (без confirm)
   async function handleDeleteAccount(id) {
-    if (!window.confirm("Удалить этот аккаунт?")) return;
     try {
       setError(null);
       await deleteAccount(id);
@@ -92,9 +92,11 @@ function DashboardPage({ user, onLogout }) {
   async function handleUploadReels(e) {
     e.preventDefault();
     if (!reelFiles || reelFiles.length === 0) return;
+    if (uploadingReels) return; // защита от повторного клика
 
     try {
       setError(null);
+      setUploadingReels(true);
       const created = await uploadReelsBulk(reelFiles);
       setReels((prev) => [...prev, ...created]);
       setReelFiles([]);
@@ -102,10 +104,12 @@ function DashboardPage({ user, onLogout }) {
     } catch (err) {
       console.error(err);
       setError("Ошибка при загрузке видео");
+    } finally {
+      setUploadingReels(false);
     }
   }
 
-  // Удаление рилса
+  // Удаление рилса (без confirm)
   async function handleDeleteReel(id) {
     try {
       setError(null);
@@ -312,15 +316,25 @@ function DashboardPage({ user, onLogout }) {
                 <button
                   type="submit"
                   className="btn btn-primary"
-                  disabled={!reelFiles || reelFiles.length === 0}
+                  disabled={
+                    uploadingReels || !reelFiles || reelFiles.length === 0
+                  }
                   style={{
-                    opacity: reelFiles && reelFiles.length > 0 ? 1 : 0.5,
+                    opacity: uploadingReels
+                      ? 0.6
+                      : reelFiles && reelFiles.length > 0
+                      ? 1
+                      : 0.5,
                     cursor:
-                      reelFiles && reelFiles.length > 0 ? "pointer" : "default",
+                      uploadingReels || !reelFiles || reelFiles.length === 0
+                        ? "default"
+                        : "pointer",
                     whiteSpace: "nowrap",
                   }}
                 >
-                  Загрузить ({reelFiles.length || 0})
+                  {uploadingReels
+                    ? "Загружаем..."
+                    : `Загрузить (${reelFiles.length || 0})`}
                 </button>
               </form>
 
