@@ -107,7 +107,6 @@ function DashboardPage({ user, onLogout }) {
 
   // Удаление рилса
   async function handleDeleteReel(id) {
-    if (!window.confirm("Удалить этот рилс?")) return;
     try {
       setError(null);
       await deleteReel(id);
